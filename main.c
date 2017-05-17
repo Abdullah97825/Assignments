@@ -7,7 +7,6 @@
 //=======================================================================================//
 //structure declerations
 
-
 typedef struct{
 	char firstname[MAX];
 	char lastname[MAX];
@@ -16,18 +15,17 @@ typedef struct{
 	int waist;
 	int hip;
 }data;
-data data_var; 
-data *Healthcare_Table;
+
 
 //=======================================================================================//
 //=======================================================================================//
 //function prototypes 
 
-data get_row(FILE *);
+//data get_row(FILE *);
 int Load_Healthcare_Table(FILE *, data *Healthcare_Table);
 int Rows_Num(FILE *);
-
-
+void Display_Healthcare_Table(data *Healthcare_Table, int);
+int Search(data *Healthcare_Table, int, char [], char []);
 
 
 //=======================================================================================//
@@ -38,12 +36,16 @@ int main() {
 
     int size;
 	FILE *source, *temp;
+	data *Healthcare_Table;
+	
 	source = fopen("healthcare.txt", "r");
+	
 	size = Load_Healthcare_Table(source, Healthcare_Table);
 	printf("\nthe file has %d rows\n", size);
+	printf("first element in the array is %s\n", Healthcare_Table[0].firstname);	
 	
 	free(Healthcare_Table);
-	fclose(source);    
+	   
     return 0;
 } 
 
@@ -54,14 +56,16 @@ int main() {
 int Load_Healthcare_Table(FILE *source, data *Healthcare_Table)
 {	
 
-	int count = 0, rows = 0, c, i = 0, j, columns = 5, eq;
-
+	int count = 0, rows = 0, c, i = 0, j, columns = 5, similarity;
+	char first[MAX], last[MAX];
 	
 	if(source == NULL)
 	{
 		printf("Error: Couldn't open file \n");
 		exit(1);
 	}
+	
+	printf("Healthcare records file has been successfully loaded!\n");
 	
 	while ((c = getc(source)) != EOF)
 	{	
@@ -72,15 +76,34 @@ int Load_Healthcare_Table(FILE *source, data *Healthcare_Table)
 	}
 	
 	Healthcare_Table = (data*) malloc(sizeof(data)* rows);
-	printf("number of rows equals %d\n", rows);
+
 	fseek(source, 0, SEEK_SET);
+	
+	//skipping first row
+	char buffer[MAX];
+	fgets(buffer, MAX, source);
+	
 	
 	for(i = 0; i < rows; i++)
 	{
-		Healthcare_Table[i] = get_row(source);
+		fscanf(source, "%s %s %c %s %d %d", &Healthcare_Table[i].firstname, &Healthcare_Table[i].lastname, &Healthcare_Table[i].gender, &Healthcare_Table[i].date, &Healthcare_Table[i].waist, &Healthcare_Table[i].hip);
+	//	Healthcare_Table[i] = get_row(source);
+	}
+
+	Display_Healthcare_Table(Healthcare_Table, rows);
+	printf("Enter the name and surname for WHR calculation (Exit - X): ");
+	scanf("%s %s", &first, &last);
+	if((first == "X")|| (first == "x"))
+	{
+		printf("Bye!!");
+		exit(1);
 	}
 	
-		
+	similarity = Search(Healthcare_Table, rows, first, last);
+
+	
+	
+	fclose(source); 	
 	return rows;
 	
 }
@@ -107,11 +130,45 @@ int Rows_Num(FILE *source){
 //=======================================================================================//
 //=======================================================================================//
 
-data get_row(FILE *source){
-	data line;
-	char str[MAX], c, buffer[MAX];
-	int i = 0, j = 0, length;
+void Display_Healthcare_Table(data *Healthcare_Table, int rows){
 	
+	int i;
+	printf("Following records have been loaded:\n");
+	printf("\n");
+	printf("Firstname\t Lastname\t gender\t Date\t Waist<cm>\t hip<cm>\n");
+	for(i = 0; i < rows; i++)
+	{
+		printf("%10s %10s %15c %10s %10d %10d\n", Healthcare_Table[i].firstname, Healthcare_Table[i].lastname, Healthcare_Table[i].gender, Healthcare_Table[i].date, Healthcare_Table[i].waist, Healthcare_Table[i].hip);
+	}
+
+	
+}
+
+//=======================================================================================//
+//=======================================================================================//
+
+int Search (data *Healthcare_Table, int size, char name[MAX], char last[MAX])
+{
+	int i = 0, first, lastname, similarity;
+	
+	for (i = 0; i < size; i++)
+	{
+		first = (strcmp(Healthcare_Table[i].firstname,name));
+		lastname = (strcmp(Healthcare_Table[i].lastname,last));
+		if(first == 0 || lastname == 0)
+		{
+			return 1;
+		}
+	}
+	return -1;
+}
+
+
+/*data get_row(FILE *source){
+	data line;
+	char buffer[MAX];
+	
+	//skipping first row
 	fgets(buffer, MAX, source);
 	
 	fscanf(source, "%s %s %c %s %d %d", &line.firstname, &line.lastname, &line.gender, &line.date, &line.waist, &line.hip);
