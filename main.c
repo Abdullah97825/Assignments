@@ -57,7 +57,7 @@ int Load_Healthcare_Table(FILE *source, data *Healthcare_Table)
 {	
 
 	int count = 0, rows = 0, c, i = 0, j, columns = 5, similarity, index, WHR;
-	char first[MAX], last[MAX];
+	char first[MAX], last[MAX], input;
 	
 	if(source == NULL)
 	{
@@ -91,9 +91,37 @@ int Load_Healthcare_Table(FILE *source, data *Healthcare_Table)
 	}
 
 	Display_Healthcare_Table(Healthcare_Table, rows);
+	
+	while(1)
+	{
+		printf("Enter the name and surname for WHR calculation (Exit - X): ");
+		scanf("%s %s", &first, &last);
+
+		input = first[0];
+		if((input == 'X')|| (input == 'x'))
+		{
+			printf("Bye!!");
+			exit(1);
+		}
+	
+		similarity = Search(Healthcare_Table, rows, first, last, &index);
+		if(similarity == 1)
+		{
+			WHR_interpreter(index, Healthcare_Table);	
+		}
+
+		else
+		{
+			printf("Not found.\n");
+		}	
+	
+	}
+	
 	printf("Enter the name and surname for WHR calculation (Exit - X): ");
 	scanf("%s %s", &first, &last);
-	if((first == "X")|| (first == "x"))
+
+	input = first[0];
+	if((input == 'X')|| (input == 'x'))
 	{
 		printf("Bye!!");
 		exit(1);
