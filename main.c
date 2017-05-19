@@ -17,6 +17,7 @@ typedef struct{
 }data;
 
 
+
 //=======================================================================================//
 //=======================================================================================//
 //function prototypes 
@@ -24,8 +25,9 @@ typedef struct{
 //data get_row(FILE *);
 int Load_Healthcare_Table(FILE *, data *Healthcare_Table);
 int Rows_Num(FILE *);
-void Display_Healthcare_Table(data *Healthcare_Table, int);
-int Search(data *Healthcare_Table, int, char [], char []);
+void Display_Healthcare_Table(data *, int);
+int Search(data *Healthcare_Table, int, char [], char [], int *);
+void WHR_interpreter(int, data *);
 
 
 //=======================================================================================//
@@ -37,13 +39,11 @@ int main() {
     int size;
 	FILE *source, *temp;
 	data *Healthcare_Table;
-	
 	source = fopen("healthcare.txt", "r");
 	
 	size = Load_Healthcare_Table(source, Healthcare_Table);
 	printf("\nthe file has %d rows\n", size);
-	printf("first element in the array is %s\n", Healthcare_Table[0].firstname);	
-	
+	printf("array in main %s\n", Healthcare_Table[0].firstname);	
 	free(Healthcare_Table);
 	   
     return 0;
@@ -56,7 +56,7 @@ int main() {
 int Load_Healthcare_Table(FILE *source, data *Healthcare_Table)
 {	
 
-	int count = 0, rows = 0, c, i = 0, j, columns = 5, similarity;
+	int count = 0, rows = 0, c, i = 0, j, columns = 5, similarity, index, WHR;
 	char first[MAX], last[MAX];
 	
 	if(source == NULL)
@@ -99,8 +99,16 @@ int Load_Healthcare_Table(FILE *source, data *Healthcare_Table)
 		exit(1);
 	}
 	
-	similarity = Search(Healthcare_Table, rows, first, last);
+	similarity = Search(Healthcare_Table, rows, first, last, &index);
+	if(similarity == 1)
+	{
+		WHR_interpreter(index, Healthcare_Table);	
+	}
 
+	else
+	{
+		printf("Not found.\n");
+	}
 	
 	
 	fclose(source); 	
@@ -147,7 +155,7 @@ void Display_Healthcare_Table(data *Healthcare_Table, int rows){
 //=======================================================================================//
 //=======================================================================================//
 
-int Search (data *Healthcare_Table, int size, char name[MAX], char last[MAX])
+int Search (data *Healthcare_Table, int size, char name[MAX], char last[MAX], int *index)
 {
 	int i = 0, first, lastname, similarity;
 	
@@ -155,32 +163,68 @@ int Search (data *Healthcare_Table, int size, char name[MAX], char last[MAX])
 	{
 		first = (strcmp(Healthcare_Table[i].firstname,name));
 		lastname = (strcmp(Healthcare_Table[i].lastname,last));
-		if(first == 0 || lastname == 0)
-		{
+		if(first == 0 && lastname == 0)
+		{	
+			*index = i;
 			return 1;
 		}
 	}
 	return -1;
 }
 
+//=======================================================================================//
+//=======================================================================================//
 
-/*data get_row(FILE *source){
-	data line;
-	char buffer[MAX];
+void WHR_interpreter(int index, data *Healthcare_Table)
+{
+	float whr, waist, hip;
+	char status[MAX];
 	
-	//skipping first row
-	fgets(buffer, MAX, source);
+	waist = Healthcare_Table[index].waist;
+	hip = Healthcare_Table[index].hip;
+
+
+	whr = waist/hip;
+	if(Healthcare_Table[index].gender == 'M')
+	{
+		if(whr < 0.85)
+			strcpy(status, "excellent");
+		else if(whr > 0.85 && whr < 0.90)
+			strcpy(status, "good");
+		else if(whr > 0.90 && whr < 0.95)
+			strcpy(status, "average");
+		else if(whr > 0.95 && whr < 1.00)
+			strcpy(status, "high");
+		else if(whr > 1.00)
+			strcpy(status, "extreme");
+			
+	}
 	
-	fscanf(source, "%s %s %c %s %d %d", &line.firstname, &line.lastname, &line.gender, &line.date, &line.waist, &line.hip);
-	printf("scanned %s %s %c %s %d %d\n", line.firstname, line.lastname, line.gender, line.date, line.waist, line.hip);
-	
-	printf("all good\n");
-	return line;
+	if(Healthcare_Table[index].gender == 'F')
+	{
+		if(whr < 0.75)
+			strcpy(status, "excellent");
+		else if(whr > 0.75 && whr < 0.80)
+			strcpy(status, "good");
+		else if(whr > 0.80 && whr < 0.85)
+			strcpy(status, "average");
+		else if(whr > 0.85 && whr < 0.90)
+			strcpy(status, "high");
+		else if(whr > 0.90)
+			strcpy(status, "extreme");
+			
+	}
+
+	printf("%s %s has WHR %.2f and classified as %s!\n", Healthcare_Table[index].firstname, Healthcare_Table[index].lastname, whr,status);
+		
 }
 
 
+
 //=======================================================================================//
 //=======================================================================================//
+
+
 
 /*-------------------------- Trash ------------------*/
 
